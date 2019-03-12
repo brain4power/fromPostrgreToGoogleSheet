@@ -28,13 +28,24 @@ with psycopg2.connect(dbname=DB_SETTINGS['DB_NAME'], user=DB_SETTINGS['USER_NAME
             data_for_google_sheet.append(list(map(str, row)))
 
 
-# подключаемся к Google-табличке и вставляем собранные из БД данные:
+# подключаемся к Google-табличке:
 credentials = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_SETTINGS['CREDENTIALS_FILE'],
                                                                ['https://www.googleapis.com/auth/spreadsheets',
                                                                 'https://www.googleapis.com/auth/drive'])
 httpAuth = credentials.authorize(httplib2.Http())
 service = apiclient.discovery.build('sheets', 'v4', http=httpAuth)
 
+# Чистим табличку
+range_ = '2:10000'
+
+clear_values_request_body = {
+}
+
+request = service.spreadsheets().values().clear(spreadsheetId=GOOGLE_SETTINGS['SHEET_ID'], range=range_,
+                                                body=clear_values_request_body)
+response = request.execute()
+
+# вставляем нужные данные в табличку:
 batch_update_values_request_body = {
     'value_input_option': 'USER_ENTERED',
     'data': [{
